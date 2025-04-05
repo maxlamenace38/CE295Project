@@ -1,0 +1,33 @@
+# Data Analysis and Scientific Computing
+numpy==1.23.4
+pandas==1.5.1
+scipy==1.9.1
+
+# Data Visualization
+matplotlib==3.5.2
+seaborn==0.11.2
+
+# Machine Learning
+scikit-learn==1.0.2
+tensorflow==2.9.1
+
+# Optimization
+gurobi==9.5.1
+
+# Web Development
+flask==2.1.1
+
+# Utility Libraries
+requests==2.27.1
+
+# Jupyter Notebook
+notebook==6.4.10
+
+# File Handling
+openpyxl==3.0.9
+
+# Testing
+pytest==7.1.1
+
+# Environment Management
+virtualenv==20.13.4
