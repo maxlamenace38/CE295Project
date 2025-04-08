@@ -12,7 +12,7 @@ scikit-learn==1.0.2
 tensorflow==2.9.1
 
 # Optimization
-gurobi==9.5.1
+gurobipy==9.5.1
 
 # Web Development
 flask==2.1.1
