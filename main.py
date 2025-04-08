@@ -34,7 +34,7 @@ P_sol = model.addVars(len(C_grid), name='P_sol')   # Power supplied by solar pan
 q = model.addVars(len(C_grid), name='q')  # State of charge of the storage system
 
 # Objective function: Minimize total cost
-objective = C_BESS * n_BESS + C_sol * n_sol + quicksum(C_grid[h] * P_grid[h] + MC_sol[h] * P_sol[h] + MC_BESS[h]+p_C_BESS for h in range(len(C_grid)))
+objective = C_BESS * n_BESS + C_sol * n_sol + quicksum(C_grid[h] * P_grid[h] + MC_sol * P_sol[h] + MC_BESS +p_C_BESS[h] for h in range(len(C_grid)))
 model.setObjective(objective, GRB.MINIMIZE)
 
 # Constraints
