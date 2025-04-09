@@ -38,4 +38,4 @@ demand_data = {
 }
 pd.DataFrame(demand_data).to_csv("demand.csv", index=False)
 
-print("All CSV files have been created with n_hours rows.")
+print(f"All CSV files have been created with {n_hours} rows.")
