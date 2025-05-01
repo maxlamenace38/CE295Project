@@ -24,6 +24,17 @@ eta_D = efficiency_data['discharging_efficiency'].values[0]
 demand = pd.read_csv('hourly_demand.csv')['demand'].values
 model = Model('EnergyOptimization')
 
+# Limitez les données à 24 heures pour tester
+C_grid = C_grid[:24]
+demand = demand[:24]
+
+# Redéfinissez les variables pour 24 heures
+p_D_BESS = model.addVars(24, name='D_BESS')
+p_C_BESS = model.addVars(24, name='C_BESS')
+P_grid = model.addVars(24, name='P_grid')
+P_sol = model.addVars(24, name='P_sol')
+q = model.addVars(24, name='q')
+
 # Decision variables
 n_BESS = model.addVar(name='n_BESS')  # Number of storage systems kWh
 n_sol = model.addVar(name='n_sol')  # Number of solar panels sqm
