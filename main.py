@@ -24,6 +24,7 @@ P_max_sol = solar_cost_data['max_power_per_sqm'].values[0]
 eta_C = efficiency_data['charging_efficiency'].values[0]
 eta_D = efficiency_data['discharging_efficiency'].values[0]
 demand = pd.read_csv('hourly_demand.csv')['demand'].values
+demand = pd.to_numeric(demand, errors='coerce')  # Convert to numeric, set invalid values to NaN
 model = Model('EnergyOptimization')
 
 # Decision variables
@@ -36,19 +37,6 @@ P_sol = model.addVars(len(C_grid), name='P_sol')   # Power supplied by solar pan
 q = model.addVars(len(C_grid), name='q')  # State of charge of the storage system
 
 
-# Limit to 3 hours for the optimization
-C_grid = C_grid[:3]
-demand = demand[:3]
-CF_solar = CF_solar[:3]
-
-
-# Redefine decision variables for 3 hours
-p_D_BESS = model.addVars(3, name='D_BESS')
-p_C_BESS = model.addVars(3, name='C_BESS')
-P_grid = model.addVars(3, name='P_grid')
-P_sol = model.addVars(3, name='P_sol')
-q = model.addVars(3, name='q')
-
 # Objective function: Minimize total cost
 objective = C_BESS * n_BESS + C_sol * n_sol + quicksum(C_grid[h] * P_grid[h] + MC_sol * P_sol[h] + MC_BESS * p_C_BESS[h] for h in range(len(C_grid)))
 model.setObjective(objective, GRB.MINIMIZE)
@@ -56,15 +44,23 @@ model.setObjective(objective, GRB.MINIMIZE)
 # Constraints
 for h in range(len(C_grid)):
     # Storage system state of charge constraint
-    q = model.addVar(name=f'q_{h}')
-    model.addConstr(q == q - p_D_BESS[h] / eta_D + p_C_BESS[h] * eta_C, name=f'SOC_{h}')
+    if h == 0:
+        model.addConstr(q[h] == 0 + p_C_BESS[h]*eta_C - p_D_BESS[h]/eta_D, name=f'SOC_init')
+    else:
+        model.addConstr(q[h] == q[h-1] + p_C_BESS[h]*eta_C - p_D_BESS[h]/eta_D, name=f'SOC_{h}')
+
 
     # Power balance constraint
-    model.addConstr(p_D_BESS[h] + P_sol[h] + P_grid[h] == demand[h], name=f'PowerBalance_{h}') #maybe need to relax to >=
+    model.addConstr(p_D_BESS[h] + P_sol[h] + P_grid[h] >= demand[h], name=f'PowerBalance_{h}') #maybe need to relax to >=
 
     # Maximum power constraints
     model.addConstr(p_D_BESS[h] <= P_max_BESS * n_BESS, name=f'MaxPowerBESS_{h}')
-    model.addConstr(P_sol[h] <= P_max_sol * n_sol * CF_solar[h]/30, name=f'MaxPowerSol_{h}')
+    model.addConstr(P_sol[h] <= P_max_sol * n_sol * CF_solar[h]/100, name=f'MaxPowerSol_{h}')
+    #SOC constraints
+    model.addConstr(q[h] <= n_BESS, name=f'SOC_capacity_{h}')
+    model.addConstr(q[h] >= 0, name=f'SOC_min_{h}')
+    model.addConstr(p_C_BESS[h]<= P_sol[h], name=f'ChargePower_{h}') # Charging power comes from solar power
+
 
 # Optimize the model
 model.optimize()
@@ -74,5 +70,42 @@ if model.status == GRB.OPTIMAL:
     print('Optimal solution found:')
     for h in range(len(C_grid)):
         print(f'Hour {h}: p_D_BESS = {p_D_BESS[h].x}, p_C_BESS = {p_C_BESS[h].x}, P_grid = {P_grid[h].x}, P_sol = {P_sol[h].x}')
+else:
+    print('No optimal solution found.')
+
+
+### Plotting the results
+import matplotlib.pyplot as plt  
+
+# Output results
+if model.status == GRB.OPTIMAL:
+    print('Optimal solution found:')
+    
+    # Extract results for plotting
+    p_D_BESS_values = [p_D_BESS[h].x for h in range(len(C_grid))]
+    p_C_BESS_values = [p_C_BESS[h].x for h in range(len(C_grid))]
+    P_grid_values = [P_grid[h].x for h in range(len(C_grid))]
+    P_sol_values = [P_sol[h].x for h in range(len(C_grid))]
+    
+    # Print results for each hour
+    for h in range(len(C_grid)):
+        print(f'Hour {h}: p_D_BESS = {p_D_BESS_values[h]}, p_C_BESS = {p_C_BESS_values[h]}, P_grid = {P_grid_values[h]}, P_sol = {P_sol_values[h]}')
+    print("n_BESS:",n_BESS.x,"n_solar:", n_sol.x)
+    # Plot results
+    hours = range(len(C_grid))
+    plt.figure(figsize=(12, 6))
+    
+    plt.plot(hours, p_D_BESS_values, label='Discharge Power (BESS)', color='blue')
+    plt.plot(hours, p_C_BESS_values, label='Charge Power (BESS)', color='orange')
+    plt.plot(hours, P_grid_values, label='Grid Power', color='green')
+    plt.plot(hours, P_sol_values, label='Solar Power', color='red')
+    
+    plt.xlabel('Hour')
+    plt.ylabel('Power (kW)')
+    plt.title('Power Distribution Over Time')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
 else:
     print('No optimal solution found.')
