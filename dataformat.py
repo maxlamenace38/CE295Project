@@ -3,7 +3,7 @@ import gurobipy as gp
 
 n_hours = 240  # Number of hours
 
-# Create data for storage_cost.csv
+# Create data for storage_cost.csv (created columns in case values change in the year)
 storage_cost_data = {
     "cost_per_kWh": [100] * n_hours,  # Example cost per kWh
     "marginal_cost_per_kW": [10] * n_hours,  # Example marginal cost per kW

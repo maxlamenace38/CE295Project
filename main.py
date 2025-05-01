@@ -4,24 +4,24 @@ from gurobipy import Model, GRB, quicksum
 # Read data from csv files
 storage_cost_data = pd.read_csv('storage_cost.csv')
 solar_cost_data = pd.read_csv('solar_cost.csv')
-grid_cost_data = pd.read_csv('grid_cost.csv')
+grid_cost_data = pd.read_csv('hourly_prices.csv')
 efficiency_data = pd.read_csv('efficiency.csv')
 
 # Extract parameters 
 C_BESS = storage_cost_data['cost_per_kWh'].values[0]
 C_sol = solar_cost_data['cost_per_sqm'].values[0]
-C_grid = grid_cost_data['cost_per_kWh'].values 
+C_grid = grid_cost_data['cost_per_kWh'].values
 # we plan here to put a 8760 values list (for the whole year), then the rest of the code adapts to it.
 
-MC_BESS = storage_cost_data['marginal_cost_per_kW'].values[0]
-MC_sol = solar_cost_data['marginal_cost_per_kW'].values[0]
+MC_BESS = storage_cost_data['marginal_cost_per_kWh'].values[0]
+MC_sol = solar_cost_data['marginal_cost_per_kWh'].values[0]
 
 P_max_BESS = storage_cost_data['max_power_per_kWh'].values[0]
 P_max_sol = solar_cost_data['max_power_per_sqm'].values[0]
 
 eta_C = efficiency_data['charging_efficiency'].values[0]
 eta_D = efficiency_data['discharging_efficiency'].values[0]
-demand = pd.read_csv('demand.csv')['demand'].values
+demand = pd.read_csv('hourly_demand.csv')['demand'].values
 model = Model('EnergyOptimization')
 
 # Decision variables
