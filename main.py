@@ -95,10 +95,11 @@ if model.status == GRB.OPTIMAL:
     hours = range(len(C_grid))
     plt.figure(figsize=(12, 6))
     
-    plt.plot(hours, p_D_BESS_values, label='Discharge Power (BESS)', color='blue')
-    plt.plot(hours, p_C_BESS_values, label='Charge Power (BESS)', color='orange')
     plt.plot(hours, P_grid_values, label='Grid Power', color='green')
     plt.plot(hours, P_sol_values, label='Solar Power', color='red')
+    plt.plot(hours, p_C_BESS_values, label='Charge Power (BESS)', color='orange')
+    plt.plot(hours, p_D_BESS_values, label='Discharge Power (BESS)', color='blue')
+    
     
     plt.xlabel('Hour')
     plt.ylabel('Power (kW)')
