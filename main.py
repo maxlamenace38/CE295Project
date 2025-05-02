@@ -60,6 +60,8 @@ for h in range(len(C_grid)):
     model.addConstr(q[h] <= n_BESS, name=f'SOC_capacity_{h}')
     model.addConstr(q[h] >= 0, name=f'SOC_min_{h}')
     model.addConstr(p_C_BESS[h]<= P_sol[h], name=f'ChargePower_{h}') # Charging power comes from solar power
+    model.addConstr(p_C_BESS[h] <= 0.5*n_BESS, name=f'RampingConstraint_{h}')
+    model.addConstr(p_D_BESS[h] <= 0.5*n_BESS, name=f'RampingConstraint_{h}') # Discharging power comes from storage system
 
 
 # Optimize the model
@@ -86,10 +88,11 @@ if model.status == GRB.OPTIMAL:
     p_C_BESS_values = [p_C_BESS[h].x for h in range(len(C_grid))]
     P_grid_values = [P_grid[h].x for h in range(len(C_grid))]
     P_sol_values = [P_sol[h].x for h in range(len(C_grid))]
+    q_values = [q[h].x for h in range(len(C_grid))]
     
     # Print results for each hour
     for h in range(len(C_grid)):
-        print(f'Hour {h}: p_D_BESS = {p_D_BESS_values[h]}, p_C_BESS = {p_C_BESS_values[h]}, P_grid = {P_grid_values[h]}, P_sol = {P_sol_values[h]}')
+        print(f'Hour {h}: p_D_BESS = {p_D_BESS_values[h]}, p_C_BESS = {p_C_BESS_values[h]}, P_grid = {P_grid_values[h]}, P_sol = {P_sol_values[h]}, SOC = {q_values[h]}')
     print("n_BESS:",n_BESS.x,"n_solar:", n_sol.x)
     # Plot results
     hours = range(len(C_grid))
@@ -106,6 +109,20 @@ if model.status == GRB.OPTIMAL:
     plt.title('Power Distribution Over Time')
     plt.legend()
     plt.grid(True)
+    plt.figure(figsize=(12, 6))
+
+    # Plot SOC
+    hours_24h = hours[:24]
+    q_values_24h = q_values[:24]
+
+    plt.plot(hours_24h, q_values_24h, label='State of Charge (SOC)', color='purple')
+    plt.xlabel('Hour')
+    plt.ylabel('State of Charge (kWh)')
+    plt.title('State of Charge Over 24 Hours')
+    plt.legend()
+    plt.grid(True)
+
+    # Show the plot
     plt.show()
 
 else:
