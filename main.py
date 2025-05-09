@@ -109,16 +109,37 @@ if model.status == GRB.OPTIMAL:
     plt.title('Power Distribution Over Time')
     plt.legend()
     plt.grid(True)
+    
     plt.figure(figsize=(12, 6))
 
-    # Plot SOC
+    # Plot SOC and 24h values
     hours_24h = hours[:24]
-    q_values_24h = q_values[:24]
+    q_values_24h = q_values[4320:4344]
+    P_grid_24h = P_grid_values[4320:4344]
+    P_sol_24h = P_sol_values[4320:4344]
+    p_C_BESS_24h = p_C_BESS_values[4320:4344]   
+    p_D_BESS_24h = p_D_BESS_values[4320:4344]
+
 
     plt.plot(hours_24h, q_values_24h, label='State of Charge (SOC)', color='purple')
     plt.xlabel('Hour')
     plt.ylabel('State of Charge (kWh)')
-    plt.title('State of Charge Over 24 Hours')
+    plt.title('State of Charge Over 24 Hours in Summer')
+    plt.legend()
+    plt.grid(True)
+
+    hours = range(24)
+    plt.figure(figsize=(12, 6))
+    
+    plt.plot(hours, P_grid_24h, label='Grid Power', color='green')
+    plt.plot(hours, P_sol_24h, label='Solar Power', color='red')
+    plt.plot(hours, p_C_BESS_24h, label='Charge Power (BESS)', color='orange')
+    plt.plot(hours, p_D_BESS_24h, label='Discharge Power (BESS)', color='blue')
+    
+    
+    plt.xlabel('Hour')
+    plt.ylabel('Power (kW)')
+    plt.title('Power Distribution Over 24h in Summer')
     plt.legend()
     plt.grid(True)
 
